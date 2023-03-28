@@ -28,8 +28,15 @@ class Patient extends Model
             'name' => 'required',
             'mother_name' => 'required',
             'birtdate' => 'required|before:now|date_format:Y-m-d',
+            'photo' => 'required',
             'cpf' => ['required', 'unique:patients,cpf,NULL,id,deleted_at,NULL', new ValidCPFRule()],
-            'cns' => ['required', 'unique:patients,cns,NULL,id,deleted_at,NULL', new ValidCNSRule()]
+            'cns' => ['required', 'unique:patients,cns,NULL,id,deleted_at,NULL', new ValidCNSRule()],
+            'cep' => 'required',
+            'address' => 'required',
+            'number' => 'required',
+            'neighborhood' => 'required',
+            'city' => 'required',
+            'state' => 'required',
         ];
     }
 

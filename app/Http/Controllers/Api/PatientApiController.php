@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Patient;
+use App\Models\FileType;
+use App\Models\AddressType;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\Api\FileApiController;
 
 class PatientApiController extends Controller
 {
@@ -30,17 +33,33 @@ class PatientApiController extends Controller
     public function store(Request $request)
     {
         try {
-            $validateFileType = Validator::make($request->all(), Patient::rules());
+            $validatePatient = Validator::make($request->all(), Patient::rules());
 
-            if($validateFileType->fails()){
+            if($validatePatient->fails()){
                 return response()->json([
                     'status' => false,
                     'message' => 'validation error',
-                    'errors' => $validateFileType->errors()
+                    'errors' => $validatePatient->errors()
                 ], 401);
             }
 
-            $fileType = Patient::create([
+            $fileType = FileType::where('name', 'patient_photo')->first();
+            if(!$fileType) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'File Type not found'
+                ], 401);
+            }
+
+            $addressType = AddressType::where('name', 'patient_address')->first();
+            if(!$addressType) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Address Type not found'
+                ], 401);
+            }
+
+            $patient = Patient::create([
                 'name' => $request->name,
                 'mother_name' => $request->mother_name,
                 'birtdate' => $request->birtdate,
@@ -48,9 +67,23 @@ class PatientApiController extends Controller
                 'cns' => $request->cns
             ]);
 
+            $request->request->add([
+                "patient_id" => $patient->id,
+                "file_type_id" => $fileType->id,
+                "address_type_id" => $addressType->id,
+                "original_name" => $request->file('photo')->getClientOriginalName(),
+                "file_size" => $request->file('photo')->getSize(),
+                "file_path" => storage_path("app/public/apiFiles"),
+                "hash" => uniqid(date('His'))
+            ]);
+
+            if($request->hasFile('photo') && $request->file('photo')->isValid()) {
+                $file = (new FileApiController)->store($request);
+            }
+
             return response()->json([
                 'status' => true,
-                'data' => $fileType
+                'data' => $patient
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([
@@ -101,13 +134,13 @@ class PatientApiController extends Controller
                 ], 401);
             }
 
-            $validateFileType = Validator::make($request->all(), Patient::rules());
+            $validatePatient = Validator::make($request->all(), Patient::rules());
 
-            if($validateFileType->fails()){
+            if($validatePatient->fails()){
                 return response()->json([
                     'status' => false,
                     'message' => 'validation error',
-                    'errors' => $validateFileType->errors()
+                    'errors' => $validatePatient->errors()
                 ], 401);
             }
 

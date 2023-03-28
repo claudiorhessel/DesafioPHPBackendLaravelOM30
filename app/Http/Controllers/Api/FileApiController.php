@@ -30,24 +30,31 @@ class FileApiController extends Controller
     public function store(Request $request)
     {
         try {
-            $validateFileType = Validator::make($request->all(), File::rules());
+            $validateFile = Validator::make($request->all(), File::rules());
 
-            if($validateFileType->fails()){
+            if($validateFile->fails()){
                 return response()->json([
                     'status' => false,
                     'message' => 'validation error',
-                    'errors' => $validateFileType->errors()
+                    'errors' => $validateFile->errors()
                 ], 401);
             }
 
-            $fileType = File::create([
-                'name' => $request->name,
-                'allowed_extensions' => $request->allowed_extensions
+            $filePath = $request->file("photo")->storeAs('public/apiFiles', uniqid(date('His')));
+
+            $file = File::create([
+                'file_type_id' => $request->file_type_id,
+                'patient_id' => $request->patient_id,
+                'original_name' => $request->original_name,
+                'extension' => $request->extension,
+                'file_path' => $request->file_path,
+                'file_size' => $request->file_size,
+                'hash' => $request->hash
             ]);
 
             return response()->json([
                 'status' => true,
-                'data' => $fileType
+                'data' => $file
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([
@@ -98,13 +105,13 @@ class FileApiController extends Controller
                 ], 401);
             }
 
-            $validateFileType = Validator::make($request->all(), File::rules());
+            $validateFile = Validator::make($request->all(), File::rules());
 
-            if($validateFileType->fails()){
+            if($validateFile->fails()){
                 return response()->json([
                     'status' => false,
                     'message' => 'validation error',
-                    'errors' => $validateFileType->errors()
+                    'errors' => $validateFile->errors()
                 ], 401);
             }
 
