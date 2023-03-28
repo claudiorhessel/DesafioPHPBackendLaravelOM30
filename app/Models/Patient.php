@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Rules\ValidCPFRule;
+use App\Rules\ValidCNSRule;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -20,14 +22,14 @@ class Patient extends Model
         'cns',
     ];
 
-    public function rules()
+    public static function rules()
     {
         return [
             'name' => 'required',
             'mother_name' => 'required',
-            'birtdate' => 'required',
-            'cpf' => 'required|unique',
-            'cns' => 'required|unique'
+            'birtdate' => 'required|before:now|date_format:Y-m-d',
+            'cpf' => ['required', 'unique:patients,cpf,NULL,id,deleted_at,NULL', new ValidCPFRule()],
+            'cns' => ['required', 'unique:patients,cns,NULL,id,deleted_at,NULL', new ValidCNSRule()]
         ];
     }
 
